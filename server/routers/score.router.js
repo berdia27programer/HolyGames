@@ -4,6 +4,6 @@ const scoreRouter = express.Router();
 
 scoreRouter.post('/', scoreController.submitScore);
 
-scoreRouter.get('/leaderboard', scoreController.getLeaderboard);
+scoreRouter.post('/report', scoreController.submitReport);
 
 module.exports = scoreRouter;
