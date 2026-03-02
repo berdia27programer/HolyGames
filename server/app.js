@@ -20,8 +20,8 @@ app.use("/api/game", gameRouter);
 mongoose.connect(process.env.DATABASE)
     .then(() => {
         console.log("MongoDB is successfully running!");
-        app.listen(process.env.PORT || 5000, () => {
-            console.log(`Holy Server is running on port ${process.env.PORT || 5000}`);
+        app.listen(process.env.PORT, () => {
+            console.log(`Holy Server is running on port ${process.env.PORT}`);
         });
     })
     .catch(err => console.log(`The Holy Server encountered an error: ${err}`));

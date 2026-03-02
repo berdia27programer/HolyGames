@@ -1,5 +1,6 @@
 const Seed = require('../models/Seed');
 const { getDailyWave } = require('../utils/primeGenerator');
+const { sendReportEmail } = require('../utils/mailer');
 
 exports.getDailyChallenge = async (req, res) => {
   try {
@@ -18,6 +19,33 @@ exports.getDailyChallenge = async (req, res) => {
       wave: gameWave
     });
   } catch (err) {
-    res.status(500).json({ message: `The Holy Server encountered an error: ${err}` });
+    res.status(500).json({ message: `Server error: ${err}` });
+  }
+};
+
+exports.reportProblem = async (req, res) => {
+  try {
+    const { userEmail, problemReport } = req.body;
+
+    if (!userEmail || !problemReport) {
+      return res.status(400).json({ message: 'Email and problem report are required' });
+    }
+
+    try {
+      await sendReportEmail(userEmail, problemReport);
+      res.status(200).json({
+        status: 'success',
+        message: 'Problem report sent successfully to the team'
+      });
+    } catch (emailErr) {
+      console.error('Email sending error:', emailErr);
+      res.status(500).json({ 
+        status: 'fail',
+        message: 'Failed to send email: ' + emailErr.message 
+      });
+    }
+  } catch (err) {
+    console.error('Report problem error:', err);
+    res.status(500).json({ message: 'Failed to process report: ' + err.message });
   }
 };
