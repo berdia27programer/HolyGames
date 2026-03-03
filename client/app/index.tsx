@@ -82,34 +82,62 @@ const CarAway = memo(({ onEndGame, gameMode, playSound }: { onEndGame: (score: n
   const roadTimer = useRef<NodeJS.Timeout | number | null>(null);
 
   useEffect(() => {
-    roadTimer.current = setInterval(() => { setRoadImage(prev => prev === 1 ? 2 : 1); }, 3000);
-    return () => { if (roadTimer.current) clearInterval(roadTimer.current); };
+    roadTimer.current = setInterval(() => {
+      setRoadImage(prev => prev === 1 ? 2 : 1);
+    }, 3000);
+
+    return () => {
+      if (roadTimer.current) clearInterval(roadTimer.current);
+    };
   }, []);
 
   useEffect(() => {
     const gameLoop = setInterval(() => {
       if (!gameOver) {
         setObstacles(prev => prev.map(obs => ({ ...obs, y: obs.y + 8 })).filter(obs => obs.y < height + 60));
+        
         if (Math.random() < 0.03) {
           const type = Math.random() < 0.3 ? 'boost' : 'obstacle';
           setObstacles(prev => [...prev, { x: Math.random() * (width - 60), y: 0, type }]);
         }
+        
         obstacles.forEach(obs => {
           if (obs.y > height - 120 && obs.y < height - 70) {
             if (obs.x < playerX + 80 && obs.x + 30 > playerX) {
-              if (obs.type === 'obstacle') { playSound('hitHurt.wav'); setGameOver(true); }
-              else if (obs.type === 'boost') { playSound('powerUp.wav'); setScore(prev => prev + 50); setObstacles(prev => prev.filter(o => o !== obs)); }
+              if (obs.type === 'obstacle') {
+                playSound('hitHurt.wav');
+                setGameOver(true);
+              } else if (obs.type === 'boost') {
+                playSound('powerUp.wav');
+                setScore(prev => prev + 50);
+                setObstacles(prev => prev.filter(o => o !== obs));
+              }
             }
             if (gameMode === 'duo' && obs.x < player2X + 80 && obs.x + 30 > player2X) {
-              if (obs.type === 'obstacle') { playSound('hitHurt.wav'); setGameOver(true); }
-              else if (obs.type === 'boost') { playSound('powerUp.wav'); setScore(prev => prev + 50); setObstacles(prev => prev.filter(o => o !== obs)); }
+              if (obs.type === 'obstacle') {
+                playSound('hitHurt.wav');
+                setGameOver(true);
+              } else if (obs.type === 'boost') {
+                playSound('powerUp.wav');
+                setScore(prev => prev + 50);
+                setObstacles(prev => prev.filter(o => o !== obs));
+              }
             }
           }
         });
       }
     }, 50);
-    const scoreLoop = setInterval(() => { if (!gameOver) setScore(prev => Math.min(prev + 1, 999999)); }, 1000);
-    return () => { clearInterval(gameLoop); clearInterval(scoreLoop); };
+
+    const scoreLoop = setInterval(() => {
+      if (!gameOver) {
+        setScore(prev => Math.min(prev + 1, 999999));
+      }
+    }, 1000);
+    
+    return () => {
+      clearInterval(gameLoop);
+      clearInterval(scoreLoop);
+    };
   }, [obstacles, playerX, player2X, gameOver, gameMode, playSound]);
 
   useEffect(() => {
@@ -119,32 +147,119 @@ const CarAway = memo(({ onEndGame, gameMode, playSound }: { onEndGame: (score: n
     }
   }, [gameOver, score, onEndGame]);
 
+  const moveLeft1 = () => {
+    setPlayerX(prev => Math.max(0, prev - 30));
+  };
+
+  const moveRight1 = () => {
+    setPlayerX(prev => Math.min(width - 80, prev + 30));
+  };
+
+  const moveLeft2 = () => {
+    setPlayer2X(prev => Math.max(0, prev - 30));
+  };
+
+  const moveRight2 = () => {
+    setPlayer2X(prev => Math.min(width - 80, prev + 30));
+  };
+
+  const handleMove = (event: any) => {
+    if (gameOver) return;
+    const touchX = event.nativeEvent.locationX;
+    const touchY = event.nativeEvent.locationY;
+    
+    if (gameMode === 'duo') {
+      if (touchY < height / 2) {
+        setPlayerX(Math.max(0, Math.min(width - 80, touchX - 40)));
+      } else {
+        setPlayer2X(Math.max(0, Math.min(width - 80, touchX - 40)));
+      }
+    } else {
+      setPlayerX(Math.max(0, Math.min(width - 80, touchX - 40)));
+    }
+  };
+
   return (
     <View style={styles.gameContainer}>
-      <Image source={roadImage === 1 ? require("./assets/imgs/road1.png") : require("./assets/imgs/road2.png")} style={styles.roadBackground} resizeMode="cover" />
+      <Image 
+        source={roadImage === 1 ? require("./assets/imgs/road1.png") : require("./assets/imgs/road2.png")}
+        style={styles.roadBackground}
+        resizeMode="cover"
+      />
+      
       <View style={styles.gameHUD}>
         <Text style={styles.templeScore}>SCORE: {score}</Text>
         <Text style={styles.templeRoad}>ROAD {roadImage}</Text>
         <Text style={styles.templeMode}>{gameMode.toUpperCase()}</Text>
       </View>
+      
       {gameOver && (
         <View style={styles.gameOverOverlay}>
           <Text style={styles.templeGameOver}>HOLY CAR CRASH!</Text>
           <Text style={styles.templeFinalScore}>Final Score: {score}</Text>
         </View>
       )}
-      <Image source={require("./assets/imgs/soloCar.png")} style={[styles.playerCarImage, { left: playerX }]} resizeMode="contain" />
-      {gameMode === 'duo' && <Image source={require("./assets/imgs/duoCar.png")} style={[styles.playerCarImage, { left: player2X, top: height - 200 }]} resizeMode="contain" />}
+      
+      <Image
+        source={require("./assets/imgs/soloCar.png")}
+        style={[styles.playerCarImage, { left: playerX }]}
+        resizeMode="contain"
+      />
+      
+      {gameMode === 'duo' && (
+        <Image
+          source={require("./assets/imgs/duoCar.png")}
+          style={[styles.playerCarImage, { left: player2X, top: height - 200 }]}
+          resizeMode="contain"
+        />
+      )}
+      
       {obstacles.map((obs, index) => (
-        <Image key={index} source={obs.type === 'obstacle' ? require("./assets/imgs/obstacle.png") : require("./assets/imgs/boost.png")} style={[styles.gameObstacle, { left: obs.x, top: obs.y, transform: [{ scale: 0.6 }] }]} resizeMode="contain" />
+        <Image
+          key={index}
+          source={obs.type === 'obstacle' ? require("./assets/imgs/obstacle.png") : require("./assets/imgs/boost.png")}
+          style={[
+            styles.gameObstacle,
+            { left: obs.x, top: obs.y, transform: [{ scale: 0.6 }] }
+          ]}
+          resizeMode="contain"
+        />
       ))}
+      
       <TouchableOpacity style={styles.templeEndButton} onPress={() => onEndGame(score)}>
         <Text style={styles.templeEndButtonText}>END HOLY DRIVE</Text>
       </TouchableOpacity>
-      <View style={gameMode === 'duo' ? styles.duoControlButtons : styles.carControlButtons}>
-        <TouchableOpacity style={styles.carControlButton} onPress={() => setPlayerX(prev => Math.max(0, prev - 30))}><Text style={styles.carControlButtonText}>◀</Text></TouchableOpacity>
-        <TouchableOpacity style={styles.carControlButton} onPress={() => setPlayerX(prev => Math.min(width - 80, prev + 30))}><Text style={styles.carControlButtonText}>▶</Text></TouchableOpacity>
-      </View>
+      
+      {gameMode === 'duo' ? (
+        <View style={styles.duoControlButtons}>
+          <View style={styles.playerControlSection}>
+            <TouchableOpacity style={styles.carControlButton} onPress={moveLeft1}>
+              <Text style={styles.carControlButtonText}>◀ P1</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.carControlButton} onPress={moveRight1}>
+              <Text style={styles.carControlButtonText}>P1 ▶</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.playerControlSection}>
+            <TouchableOpacity style={styles.carControlButton} onPress={moveLeft2}>
+              <Text style={styles.carControlButtonText}>◀ P2</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.carControlButton} onPress={moveRight2}>
+              <Text style={styles.carControlButtonText}>P2 ▶</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.carControlButtons}>
+          <TouchableOpacity style={styles.carControlButton} onPress={moveLeft1}>
+            <Text style={styles.carControlButtonText}>◀ LEFT</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.carControlButton} onPress={moveRight1}>
+            <Text style={styles.carControlButtonText}>RIGHT ▶</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
     </View>
   );
 });
