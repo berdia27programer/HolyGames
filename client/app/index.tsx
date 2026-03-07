@@ -269,6 +269,7 @@ const PrimeGuess = memo(({ onEndGame, playSound }: { onEndGame: (score: number) 
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [gameEnded, setGameEnded] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false)
 
   useEffect(() => { setNumber(Math.floor(Math.random() * 100) + 1); }, []);
   useEffect(() => {
@@ -286,6 +287,12 @@ const PrimeGuess = memo(({ onEndGame, playSound }: { onEndGame: (score: number) 
     if (isPrime(number) === guess) { playSound('powerUp.wav'); setScore(score + 10); }
     else playSound('hitHurt.wav');
     setNumber(Math.floor(Math.random() * 100) + 1);
+
+    setIsDisabled(true);
+
+    setTimeout(() => {
+      setIsDisabled(false);
+    }, 1000);
   };
 
   return (
@@ -298,8 +305,8 @@ const PrimeGuess = memo(({ onEndGame, playSound }: { onEndGame: (score: number) 
           <Text style={styles.templeNumber}>{number}</Text>
           <Text style={styles.templeQuestion}>Is this number prime?</Text>
           <View style={styles.templeButtonContainer}>
-            <TouchableOpacity style={styles.templeYesButton} onPress={() => handleGuess(true)}><Text style={styles.templeButtonText}>YES ✓</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.templeNoButton} onPress={() => handleGuess(false)}><Text style={styles.templeButtonText}>NO ✗</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.templeYesButton} onPress={() => handleGuess(true)} disabled={isDisabled}><Text style={styles.templeButtonText}>YES ✓</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.templeNoButton} onPress={() => handleGuess(false)} disabled={isDisabled}><Text style={styles.templeButtonText}>NO ✗</Text></TouchableOpacity>
           </View>
         </>
       )}
