@@ -2,6 +2,7 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { ActivityIndicator, View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, ScrollView, TextInput, Platform } from "react-native";
 import { useFonts, PixelifySans_400Regular } from '@expo-google-fonts/pixelify-sans';
 import { Audio } from 'expo-av';
+import 'react-native-url-polyfill/auto';
 
 const { width, height } = Dimensions.get('window');
 const isLargeScreen = width >= 768;
@@ -412,7 +413,6 @@ const Dodger = memo(({ onEndGame, playSound, gameMode }: { onEndGame: (score: nu
         style={styles.bossImageTop}
         resizeMode="contain"
       />
-      
       {lasers.map((laser) => (
         <Image
           key={laser.id}
